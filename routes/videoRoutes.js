@@ -30,5 +30,6 @@ const upload = multer({
 });
 
 router.post('/upload', upload.single('file'), videoController.uploadVideo);
+router.post('/trim', videoController.trimVideo);
 
 module.exports = router;

@@ -65,7 +65,56 @@ const uploadVideo = async (req, res) => {
     }
 };
 
+const trimVideo = async (req, res) => {
+    console.log("Request Body:", req.body);
+    const { id, trimStart, trimEnd } = req.body;
+
+    if (!id || (trimStart === undefined && trimEnd === undefined)) {
+        return res.status(400).json({ message: 'Invalid id, trimStart, or trimEnd.' });
+    }
+
+    try {
+        const video = await Video.findByPk(id);
+        console.log("Fetched video:", video);
+        if (!video) return res.status(404).json({ message: 'Video not found.' });
+
+        const duration = await getVideoDuration(video.filePath);
+        let start = 0;
+        let end = duration;
+
+        if (trimStart !== undefined) {
+            if (trimStart < 0 || trimStart > duration) {
+                return res.status(400).json({ message: 'Invalid trimStart time.' });
+            }
+            start = trimStart;
+        }
+
+        if (trimEnd !== undefined) {
+            if (trimEnd < start || trimEnd > duration) {
+                return res.status(400).json({ message: 'Invalid trimEnd time.' });
+            }
+            end = trimEnd;
+        }
+
+        const outputFilePath = path.join(__dirname, '..', 'uploads', `trimmed_${video.id}_${Date.now()}.mp4`);
+        console.log(`Executing FFmpeg command: ${ffmpegPath} -i "${video.filePath}" -ss ${start} -to ${end} -c copy "${outputFilePath}"`);
+
+        exec(`${ffmpegPath} -i "${video.filePath}" -ss ${start} -to ${end} -c copy "${outputFilePath}"`, (error, stdout, stderr) => {
+            if (error) {
+                console.error('FFmpeg Error:', stderr);
+                return res.status(500).json({ message: 'Error trimming video', error: stderr });
+            }
+            res.status(200).json({ message: 'Video trimmed successfully', filePath: outputFilePath });
+        });
+    } catch (error) {
+        console.error('Unexpected Error:', error);
+        res.status(500).json({ message: 'Error trimming video', error });
+    }
+};
+
+
 module.exports = {
     authenticate,
     uploadVideo,
+    trimVideo
 };
