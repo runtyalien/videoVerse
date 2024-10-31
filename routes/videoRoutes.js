@@ -31,5 +31,6 @@ const upload = multer({
 
 router.post('/upload', upload.single('file'), videoController.uploadVideo);
 router.post('/trim', videoController.trimVideo);
+router.post('/merge', videoController.mergeVideos);
 
 module.exports = router;

@@ -112,9 +112,39 @@ const trimVideo = async (req, res) => {
     }
 };
 
+const mergeVideos = async (req, res) => {
+    const { videoIds } = req.body;
+
+    if (!Array.isArray(videoIds) || videoIds.length < 2) {
+        return res.status(400).json({ message: 'Provide at least two video IDs to merge.' });
+    }
+
+    try {
+        const videos = await Video.findAll({ where: { id: videoIds } });
+        if (videos.length !== videoIds.length) {
+            return res.status(404).json({ message: 'Some videos not found.' });
+        }
+
+        const inputFiles = videos.map(video => `file '${video.filePath}'`).join('\n');
+        const inputFileListPath = path.join(__dirname, '..', 'uploads', 'input.txt');
+        fs.writeFileSync(inputFileListPath, inputFiles);
+
+        const outputFilePath = path.join(__dirname, '..', 'uploads', `merged_${Date.now()}.mp4`);
+        exec(`${ffmpegPath} -f concat -safe 0 -i "${inputFileListPath}" -c copy "${outputFilePath}"`, (error) => {
+            if (error) {
+                return res.status(500).json({ message: 'Error merging videos', error });
+            }
+            res.status(200).json({ message: 'Videos merged successfully', filePath: outputFilePath });
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Error merging videos', error });
+    }
+};
+
 
 module.exports = {
     authenticate,
     uploadVideo,
-    trimVideo
+    trimVideo,
+    mergeVideos
 };
