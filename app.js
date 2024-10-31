@@ -8,7 +8,7 @@ dotenv.config();
 const app = express();
 
 app.use(express.json());
-app.use('/api', videoRoutes);
+app.use('/api/videos', videoRoutes);
 app.use(errorMiddleware);
 
 module.exports = app;
