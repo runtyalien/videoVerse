@@ -141,10 +141,55 @@ const mergeVideos = async (req, res) => {
     }
 };
 
+const shareVideo = async (req, res) => {
+    const { id, expiryTime } = req.body;
+
+    try {
+        const video = await Video.findByPk(id);
+        if (!video) return res.status(404).json({ message: 'Video not found.' });
+
+        const expiryDate = new Date();
+        expiryDate.setHours(expiryDate.getHours() + expiryTime);
+        video.expiryTime = expiryDate;
+        await video.save();
+
+        const link = `http://localhost:5000/api/videos/${video.id}/play`;
+        res.status(200).json({ message: 'Video link shared successfully', link, expiryTime: expiryDate });
+    } catch (error) {
+        res.status(500).json({ message: 'Error sharing video', error });
+    }
+};
+
+const playVideo = async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const video = await Video.findByPk(id);
+        if (!video) return res.status(404).json({ message: 'Video not found.' });
+
+        const currentTime = new Date();
+        if (video.expiryTime && currentTime > video.expiryTime) {
+            return res.status(403).json({ message: 'Link has expired.' });
+        }
+
+        const absoluteFilePath = path.resolve(video.filePath);
+        if (!fs.existsSync(absoluteFilePath)) {
+            return res.status(404).json({ message: 'File not found.' });
+        }
+
+        res.setHeader('Content-Type', 'video/mp4');
+        res.sendFile(absoluteFilePath);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error playing video', error: error.message });
+    }
+};
 
 module.exports = {
     authenticate,
     uploadVideo,
     trimVideo,
-    mergeVideos
+    mergeVideos,
+    shareVideo,
+    playVideo
 };
