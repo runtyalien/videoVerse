@@ -12,7 +12,7 @@
                 "header": [
                     {
                         "key": "Authorization",
-                        "value": "Bearer YOUR_STATIC_API_TOKEN"
+                        "value": "Bearer x9h7g2bqL4p9t2Q3j0R1e6aZ7sV3w8uY"
                     }
                 ],
                 "body": {
@@ -70,7 +70,7 @@
                 "header": [
                     {
                         "key": "Authorization",
-                        "value": "Bearer YOUR_STATIC_API_TOKEN"
+                        "value": "Bearer x9h7g2bqL4p9t2Q3j0R1e6aZ7sV3w8uY"
                     },
                     {
                         "key": "Content-Type",
@@ -80,9 +80,9 @@
                 "body": {
                     "mode": "raw",
                     "raw": {
-                        "title": "Sample Video",
+                        "title": "video_1",
                         "trimStart": 10,
-                        "trimEnd": 50
+                        "trimEnd": 15
                     }
                 },
                 "url": {
@@ -98,7 +98,7 @@
                     "code": 200,
                     "body": {
                         "message": "Video trimmed successfully",
-                        "filePath": "uploads/trimmed_Sample_Video_1630450923000.mp4"
+                        "filePath": "uploads/trimmed_video_1_1630450923000.mp4"
                     }
                 },
                 {
@@ -122,7 +122,7 @@
                 "header": [
                     {
                         "key": "Authorization",
-                        "value": "Bearer YOUR_STATIC_API_TOKEN"
+                        "value": "Bearer x9h7g2bqL4p9t2Q3j0R1e6aZ7sV3w8uY"
                     },
                     {
                         "key": "Content-Type",
@@ -132,7 +132,7 @@
                 "body": {
                     "mode": "raw",
                     "raw": {
-                        "titles": ["Sample Video 1", "Sample Video 2"]
+                        "titles": ["video_1", "video_2"]
                     }
                 },
                 "url": {
@@ -148,7 +148,7 @@
                     "code": 200,
                     "body": {
                         "message": "Videos merged successfully",
-                        "filePath": "uploads/merged_Sample_Video_1_Sample_Video_2.mp4"
+                        "filePath": "uploads/merged_video_1_video_2.mp4"
                     }
                 },
                 {
@@ -160,7 +160,7 @@
                 {
                     "code": 404,
                     "body": {
-                        "message": "Some videos not found: Sample Video 3"
+                        "message": "Some videos not found: video_1"
                     }
                 }
             ]
@@ -172,7 +172,7 @@
                 "header": [
                     {
                         "key": "Authorization",
-                        "value": "Bearer YOUR_STATIC_API_TOKEN"
+                        "value": "Bearer x9h7g2bqL4p9t2Q3j0R1e6aZ7sV3w8uY"
                     },
                     {
                         "key": "Content-Type",
@@ -218,7 +218,7 @@
                 "header": [
                     {
                         "key": "Authorization",
-                        "value": "Bearer YOUR_STATIC_API_TOKEN"
+                        "value": "Bearer x9h7g2bqL4p9t2Q3j0R1e6aZ7sV3w8uY"
                     }
                 ],
                 "url": {
