@@ -51,12 +51,17 @@ const uploadVideo = async (req, res) => {
         if (duration < MIN_DURATION || duration > MAX_DURATION) {
             return res.status(400).json({ message: `Duration must be between ${MIN_DURATION} and ${MAX_DURATION} seconds.` });
         }
+        const sanitizedTitle = title.replace(/[^a-zA-Z0-9]/g, '_');
+        const newFilePath = path.join('uploads', `${sanitizedTitle}${path.extname(file.originalname)}`);
+        const newAbsoluteFilePath = path.resolve(newFilePath);
+
+        fs.renameSync(absoluteFilePath, newAbsoluteFilePath);
 
         const newVideo = await Video.create({
-            title,
+            title: sanitizedTitle,
             size: file.size,
             duration,
-            filePath: file.path,
+            filePath: newFilePath,
         });
 
         res.status(201).json(newVideo);
@@ -67,15 +72,14 @@ const uploadVideo = async (req, res) => {
 
 const trimVideo = async (req, res) => {
     console.log("Request Body:", req.body);
-    const { id, trimStart, trimEnd } = req.body;
+    const { title, trimStart, trimEnd } = req.body;
 
-    if (!id || (trimStart === undefined && trimEnd === undefined)) {
+    if (!title || (trimStart === undefined && trimEnd === undefined)) {
         return res.status(400).json({ message: 'Invalid id, trimStart, or trimEnd.' });
     }
 
     try {
-        const video = await Video.findByPk(id);
-        console.log("Fetched video:", video);
+        const video = await Video.findOne({ where: { title: title } });
         if (!video) return res.status(404).json({ message: 'Video not found.' });
 
         const duration = await getVideoDuration(video.filePath);
@@ -96,7 +100,7 @@ const trimVideo = async (req, res) => {
             end = trimEnd;
         }
 
-        const outputFilePath = path.join(__dirname, '..', 'uploads', `trimmed_${video.id}_${Date.now()}.mp4`);
+        const outputFilePath = path.join(__dirname, '..', 'uploads', `trimmed_${video.title}_${Date.now()}.mp4`);
         console.log(`Executing FFmpeg command: ${ffmpegPath} -i "${video.filePath}" -ss ${start} -to ${end} -c copy "${outputFilePath}"`);
 
         exec(`${ffmpegPath} -i "${video.filePath}" -ss ${start} -to ${end} -c copy "${outputFilePath}"`, (error, stdout, stderr) => {
@@ -113,39 +117,46 @@ const trimVideo = async (req, res) => {
 };
 
 const mergeVideos = async (req, res) => {
-    const { videoIds } = req.body;
+    const { titles } = req.body;
 
-    if (!Array.isArray(videoIds) || videoIds.length < 2) {
-        return res.status(400).json({ message: 'Provide at least two video IDs to merge.' });
+    if (!Array.isArray(titles) || titles.length < 2) {
+        return res.status(400).json({ message: 'Provide at least two video titles to merge.' });
     }
 
     try {
-        const videos = await Video.findAll({ where: { id: videoIds } });
-        if (videos.length !== videoIds.length) {
-            return res.status(404).json({ message: 'Some videos not found.' });
+        const videos = await Video.findAll({ where: { title: titles } });
+        const fetchedTitles = videos.map(video => video.title);
+        const missingTitles = titles.filter(title => !fetchedTitles.includes(title));
+        if (missingTitles.length > 0) {
+            return res.status(404).json({ message: `Some videos not found: ${missingTitles.join(', ')}` });
         }
 
-        const inputFiles = videos.map(video => `file '${video.filePath}'`).join('\n');
+        const inputFiles = videos
+            .map(video => `file '${path.resolve(video.filePath).replace(/\\/g, '/')}'`)
+            .join('\n');
         const inputFileListPath = path.join(__dirname, '..', 'uploads', 'input.txt');
         fs.writeFileSync(inputFileListPath, inputFiles);
 
-        const outputFilePath = path.join(__dirname, '..', 'uploads', `merged_${Date.now()}.mp4`);
-        exec(`${ffmpegPath} -f concat -safe 0 -i "${inputFileListPath}" -c copy "${outputFilePath}"`, (error) => {
+        const sanitizedTitles = titles.join('_').replace(/[^a-zA-Z0-9_]/g, '_');
+        const outputFilePath = path.join(__dirname, '..', 'uploads', `merged_${sanitizedTitles}.mp4`);
+        exec(`${ffmpegPath} -f concat -safe 0 -i "${inputFileListPath}" -c copy "${outputFilePath}"`, (error, stdout, stderr) => {
             if (error) {
-                return res.status(500).json({ message: 'Error merging videos', error });
+                console.error('FFmpeg Error:', stderr);
+                return res.status(500).json({ message: 'Error merging videos', error: stderr });
             }
             res.status(200).json({ message: 'Videos merged successfully', filePath: outputFilePath });
         });
     } catch (error) {
-        res.status(500).json({ message: 'Error merging videos', error });
+        console.error('Unexpected Error:', error);
+        res.status(500).json({ message: 'Error merging videos', error: error.message });
     }
 };
 
 const shareVideo = async (req, res) => {
-    const { id, expiryTime } = req.body;
+    const { title, expiryTime } = req.body;
 
     try {
-        const video = await Video.findByPk(id);
+        const video = await Video.findOne({ where: { title: title } });
         if (!video) return res.status(404).json({ message: 'Video not found.' });
 
         const expiryDate = new Date();

@@ -12,7 +12,9 @@ const storage = multer.diskStorage({
         cb(null, path.join(__dirname, '..', 'uploads'));
     },
     filename: (req, file, cb) => {
-        cb(null, `${Date.now()}-${file.originalname}`);
+        // const fileExtension = path.extname(file.originalname);
+        const originalName = file.originalname.replace(/[^a-zA-Z0-9]/g, '_');
+        cb(null, `temp_${originalName}`);
     },
 });
 
