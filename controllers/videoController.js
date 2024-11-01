@@ -177,8 +177,13 @@ const playVideo = async (req, res) => {
         const video = await Video.findByPk(id);
         if (!video) return res.status(404).json({ message: 'Video not found.' });
 
+        // Check if the video has an expiry time set
+        if (!video.expiryTime) {
+            return res.status(403).json({ message: 'This video has not been shared yet.' });
+        }
+
         const currentTime = new Date();
-        if (video.expiryTime && currentTime > video.expiryTime) {
+        if (currentTime > video.expiryTime) {
             return res.status(403).json({ message: 'Link has expired.' });
         }
 
