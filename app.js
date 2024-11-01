@@ -1,7 +1,7 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const videoRoutes = require('./routes/videoRoutes')
-const errorMiddleware = require('./middlewares/errorMiddleware')
+const authenticate = require('./middlewares/auth');
 const cors = require('cors');
 
 dotenv.config();
@@ -12,6 +12,6 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/api/videos', videoRoutes);
-app.use(errorMiddleware);
+app.use(authenticate);
 
 module.exports = app;

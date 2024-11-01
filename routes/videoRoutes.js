@@ -2,6 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const videoController = require('../controllers/videoController');
 const path = require('path');
+const authenticate = require('../middlewares/auth');
 
 
 const router = express.Router();
@@ -31,10 +32,10 @@ const upload = multer({
     },
 });
 
-router.post('/upload', upload.single('file'), videoController.uploadVideo);
-router.post('/trim', videoController.trimVideo);
-router.post('/merge', videoController.mergeVideos);
-router.post('/share', videoController.shareVideo);
+router.post('/upload', authenticate, upload.single('file'), videoController.uploadVideo);
+router.post('/trim', authenticate, videoController.trimVideo);
+router.post('/merge', authenticate, videoController.mergeVideos);
+router.post('/share', authenticate, videoController.shareVideo);
 router.get('/:id/play', videoController.playVideo);
 
 module.exports = router;
