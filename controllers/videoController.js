@@ -1,3 +1,4 @@
+require('dotenv').config();
 const Video = require('../models/videoModel');
 const jwt = require('jsonwebtoken');
 const fs = require('fs');
@@ -6,9 +7,9 @@ const ffmpegPath = require('ffmpeg-static');
 const { exec } = require('child_process');
 const ffprobePath = require('ffprobe-static').path;
 
-const MAX_SIZE = 25 * 1024 * 1024;
-const MIN_DURATION = 5;
-const MAX_DURATION = 300;
+const MAX_SIZE = parseInt(process.env.MAX_SIZE, 10)
+const MIN_DURATION = parseInt(process.env.MIN_DURATION, 10)
+const MAX_DURATION = parseInt(process.env.MAX_DURATION, 10)
 
 const authenticate = (req, res, next) => {
     const token = req.headers['authorization'];
