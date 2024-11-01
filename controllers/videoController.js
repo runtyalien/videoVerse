@@ -159,8 +159,7 @@ const shareVideo = async (req, res) => {
         const video = await Video.findOne({ where: { title: title } });
         if (!video) return res.status(404).json({ message: 'Video not found.' });
 
-        const expiryDate = new Date();
-        expiryDate.setHours(expiryDate.getHours() + expiryTime);
+        const expiryDate = new Date(Date.now() + Number(expiryTime) * 1000);
         video.expiryTime = expiryDate;
         await video.save();
 
